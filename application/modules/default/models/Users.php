@@ -1,8 +1,8 @@
 <?php
-/********************************************************************************* 
+/*********************************************************************************
  *  This file is part of Sentrifugo.
  *  Copyright (C) 2014 Sapplica
- *   
+ *
  *  Sentrifugo is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
@@ -33,7 +33,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 	 * @return boolean
 	 */
 	public function isLdapUser($username) {
-			
+
 		return false;
 	}
 
@@ -52,9 +52,9 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		->joinLeft(array('e'=>'main_employees'),"e.user_id = u.id",array('e.reporting_manager','e.is_orghead','e.businessunit_id','e.department_id','e.jobtitle_id','e.position_id'))
 		//->where("(u.employeeId = '".$username."' OR u.emailaddress = '".$username."') and u.isactive = 1");
        ->where("u.isactive = 1 and (u.employeeId = ? OR u.emailaddress = ?)",array($username));
-			
+
 		$result_one = $this->fetchAll($query);
-			
+
 		if(isset($result_one[0]) && $result_one[0]['isactive'] == 1  )
 		{
 			$userObject = $result_one[0];
@@ -73,7 +73,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 			if($userid)
 			{
 				$db = Zend_Db_Table::getDefaultAdapter();
-				 $query = "update main_employees_summary  set backgroundchk_status = '".$data['backgroundchk_status']."', modifiedby = ".$data['modifiedby'].", modifieddate = '".$data['modifieddate']."' where user_id = ".$userid;		
+				 $query = "update main_employees_summary  set backgroundchk_status = '".$data['backgroundchk_status']."', modifiedby = ".$data['modifiedby'].", modifieddate = '".$data['modifieddate']."' where user_id = ".$userid;
 				$db->query($query);
 			}
 			return 'update';
@@ -92,22 +92,22 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		try
 		{
 			$db = Zend_Db_Table::getDefaultAdapter();
-			
+
 			$userData = $db->select()
 			->from(array('a' => 'main_users'),array('aid' => 'a.id'))
 			->joinInner(array('r'=>'main_roles'), 'r.id=a.emprole',array("def_status" => "if(r.group_id in (1,5) and a.userstatus = 'new','old',a.userstatus)"))
 			->where("a.isactive = 1 AND r.isactive = 1 AND a.emptemplock = 0 AND (a.employeeId = ? OR a.emailaddress = ?)",array($corpEmail));
-			
+
 			$new_userdata = $db->select()
 			->from(array('ac'=>$userData),array('count'=>'count(*)'))
 			->where("ac.def_status = 'old'");
-			
+
 		}
 		catch(Exception $e)
 		{
 			echo $e->getMessage();die;
 		}
-		
+
 		return $db->fetchAll($new_userdata);
 	}
 
@@ -117,9 +117,9 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		{
 			$userData = $this->select()->setIntegrityCheck(false)
 			->from(array('u' => 'main_users'),array('status' => 'u.isactive','isaccountlock' =>'u.emptemplock'))
-			
+
 			->where("u.employeeId = ? OR u.emailaddress = ?",array($corpEmail));
-			
+
 		}
 		catch(Exception $e)
 		{
@@ -127,7 +127,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		}
 		return $this->fetchAll($userData)->toArray();
 	}
-	
+
 	public function getUserDateOfJoining($corpEmail)
 	{
 		try
@@ -136,7 +136,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 			->from(array('u' => 'main_users'),array())
 			->joinInner(array('e'=>'main_employees'), 'e.user_id=u.id',array('date_of_joining',"doj" => "if(e.date_of_joining <= CURDATE(),1,0)"))
 			->where("u.employeeId = ? OR u.emailaddress = ?",array($corpEmail));
-			
+
 		}
 		catch(Exception $e)
 		{
@@ -147,14 +147,14 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 
 	public function edituserPassword($data,$where)
 	{
-		
+
 		$update = $this->update($data, $where);
-		
+
 	}
 
 	public function getUserDetailsByID($id,$flag='')
 	{
-	    
+
 	    if($id !='' && $id != NULL)
 		{
 			if($flag == 'all')
@@ -171,8 +171,8 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 			}
 			return $this->fetchAll($result)->toArray();
 		}
-			
-		
+
+
 	}
 
 	public function getUserDetails($id)
@@ -188,7 +188,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 	public function getUsers()
 	{
 		$db = Zend_Db_Table::getDefaultAdapter();
-		
+
 		$usersData = $db->query("select u.id,u.userfullname from main_users u
         join main_roles r on u.emprole = r.id where r.group_id IN(".MANAGER_GROUP.",".HR_GROUP.",".EMPLOYEE_GROUP.",".SYSTEMADMIN_GROUP.") AND u.userstatus='new' AND u.isactive=1 ");
 
@@ -215,7 +215,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		*/
 	public function getReportingManagerList($dept_id,$employee_id='',$employee_group='')
 	{
-		
+
 		/*
 			When there are no managers for selected department.get management as reporting managers.
 			*/
@@ -223,11 +223,11 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		$db = Zend_Db_Table::getDefaultAdapter();
 		if($dept_id != "")
 		{
-			$qry = "select * from ((SELECT u.id, concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as 		name,u.profileimg 
-			FROM main_users u 
-			INNER JOIN main_roles r ON u.emprole = r.id 
-			INNER JOIN main_employees e ON u.id = e.user_id 
-			left join main_jobtitles j on j.id = e.jobtitle_id 
+			$qry = "select * from ((SELECT u.id, concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as 		name,u.profileimg
+			FROM main_users u
+			INNER JOIN main_roles r ON u.emprole = r.id
+			INNER JOIN main_employees e ON u.id = e.user_id
+			left join main_jobtitles j on j.id = e.jobtitle_id
 			WHERE e.department_id = ".$dept_id;
 
 			if($employee_id != "")
@@ -244,7 +244,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 			}
 			$qry .= " AND u.userstatus='old' AND u.isactive=1 AND r.isactive=1) union
 			(select u.id,concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as name,u.profileimg from main_users u
-			INNER JOIN main_employees e ON u.id = e.user_id 
+			INNER JOIN main_employees e ON u.id = e.user_id
                         left join main_jobtitles j on j.id = e.jobtitle_id
 			INNER JOIN main_roles r ON u.emprole = r.id  where  ";
 			if($employee_id != "")
@@ -259,11 +259,11 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 			}
 			$qry .= " ) app order by app.name asc";
 
-			
+
 			$reportingManagersData = $db->query($qry);
 			$res = $reportingManagersData->fetchAll();
 		}
-		
+
 		return $res;
 	}
         /**
@@ -274,7 +274,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
          * @return DataSet Consists of reporting managers of names and their id's.
          */
         public function getReportingManagerList_employees($dept_id ='',$employee_id='',$employee_group)
-	{		
+	{
             /*
                 When there are no managers for selected department.get management as reporting managers.
             */
@@ -284,11 +284,11 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
             {
                 if($employee_group == MANAGEMENT_GROUP)
                 {
-                    $qry_str = " SELECT u.id, concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as name,u.profileimg 
-                                FROM main_users u 
-                                INNER JOIN main_roles r ON u.emprole = r.id 
-                                INNER JOIN main_employees e ON u.id = e.user_id 
-                                LEFT join main_jobtitles j on j.id = e.jobtitle_id 
+                    $qry_str = " SELECT u.id, concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as name,u.profileimg
+                                FROM main_users u
+                                INNER JOIN main_roles r ON u.emprole = r.id
+                                INNER JOIN main_employees e ON u.id = e.user_id
+                                LEFT join main_jobtitles j on j.id = e.jobtitle_id
                                 WHERE  r.group_id IN (1)  AND u.userstatus='old' AND u.isactive=1 AND r.isactive=1 ";
                     if($dept_id == '')
                     {
@@ -298,15 +298,15 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
                             $qry .= " AND  e.user_id != ".$employee_id;
                         }
                     }
-                    else 
+                    else
                     {
                         $qry = "select * from ((  ".$qry_str;
                         if($employee_id != "")
                         {
                             $qry .= " AND  e.user_id != ".$employee_id;
                         }
-                        $qry .="  ) 
-                                union 
+                        $qry .="  )
+                                union
                                 (  ".$qry_str." and e.department_id = ".$dept_id." ";
                         if($employee_id != "")
                         {
@@ -315,17 +315,17 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
                        $qry .= "     )) q";
                     }
 					$qry .= " order by name asc ";
-					
+
                 }
-                else 
+                else
                 {
                     if($dept_id != '')
                     {
-                        $qry = "select * from ((SELECT u.id, concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as name,u.profileimg 
-                                FROM main_users u 
-                                INNER JOIN main_roles r ON u.emprole = r.id 
-                                INNER JOIN main_employees e ON u.id = e.user_id 
-                                left join main_jobtitles j on j.id = e.jobtitle_id 
+                        $qry = "select * from ((SELECT u.id, concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as name,u.profileimg
+                                FROM main_users u
+                                INNER JOIN main_roles r ON u.emprole = r.id
+                                INNER JOIN main_employees e ON u.id = e.user_id
+                                left join main_jobtitles j on j.id = e.jobtitle_id
                                 WHERE e.department_id = ".$dept_id." ";
 
                         if($employee_id != "")
@@ -342,7 +342,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
                         }
                         $qry .= " AND u.userstatus='old' AND u.isactive=1 AND r.isactive=1) union
                         (select u.id,concat(u.userfullname,if(j.jobtitlename is null,'',concat(' , ',j.jobtitlename))) as name,u.profileimg from main_users u
-                        INNER JOIN main_employees e ON u.id = e.user_id 
+                        INNER JOIN main_employees e ON u.id = e.user_id
                         left join main_jobtitles j on j.id = e.jobtitle_id
                         INNER JOIN main_roles r ON u.emprole = r.id  where  ";
                         if($employee_id != "")
@@ -350,19 +350,19 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
                                 $qry .= " e.user_id != ".$employee_id." AND ";
                         }
                         $qry .= "   r.group_id = ".MANAGEMENT_GROUP ." AND u.isactive=1 AND r.isactive=1)";
-                        
+
                         $qry .= " ) app order by app.name asc";
                     }
-                
+
                 }
                 if($qry != '')
-                {                    
+                {
                     $reportingManagersData = $db->query($qry);
                     $res = $reportingManagersData->fetchAll();
                 }
             }
-            
-            
+
+
             return $res;
 	}
 	public function getReportingManagerList_30092013()
@@ -372,7 +372,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		->from(array('u'=>'main_users'), array('u.id','u.userfullname'))
 		->joinInner(array('r'=>'main_roles'),'u.emprole = r.id',array())
 		->where('r.group_id='.MANAGER_GROUP.' AND u.userstatus="old" AND u.isactive=1');
-		
+
 		return $this->fetchAll($select)->toArray();
 	}
 
@@ -400,7 +400,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 	public function getLoggedInUserPwd($id,$email,$employeid){
 		$db = Zend_Db_Table::getDefaultAdapter();
 		$sql=$db->query("select um.emppassword from main_users um where um.id='".$id."' and um.emailaddress = '".$email."' and um.employeeId='".$employeid."' ");
-		
+
 		$result= $sql->fetch();
 
 		return $result;
@@ -417,7 +417,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		{
 			$db->query("update main_users  set emppassword = '".$newpswd."' where emailaddress = '".$email."'");
 		}
-		
+
 	}
 
 	public function getEmailAddressCount($email)
@@ -426,7 +426,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		->setIntegrityCheck(false)
 		->from(array('u'=>'main_users'), array('emailcount'=>'count(u.emailaddress)','u.userfullname'))
 		->where('u.emailaddress="'.$email.'" AND u.isactive = 1 AND u.emptemplock = 0');
-		
+
 		return $this->fetchAll($select)->toArray();
 
 	}
@@ -437,7 +437,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		->setIntegrityCheck(false)
 		->from(array('u'=>'main_users'), array('u.emppassword','u.userfullname','u.isactive','u.emptemplock'))
 		->where('u.emailaddress="'.$email.'" ');
-		
+
 		return $this->fetchAll($select)->toArray();
 
 	}
@@ -463,7 +463,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 	 ->joinInner(array('r'=>'main_roles'),'u.emprole = r.id',array('r.group_id'))
 	 ->where('u.id='.$userId.' AND u.isactive=1');
 		$userBGstatus = $this->fetchAll($select)->toArray();
-		
+
 		return $userBGstatus;
 	}
 
@@ -474,7 +474,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		{
 			$db = Zend_Db_Table::getDefaultAdapter();
 			$deptAddRes = $db->query("select d.address1,c.country,s.state,ct.city
-									from main_departments d 
+									from main_departments d
 									inner join main_countries c ON c.country_id_org = d.country
 									inner join main_states s ON s.state_id_org = d.state
 									inner join main_cities ct ON ct.city_org_id = d.city
@@ -483,26 +483,26 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		}
 		else return $res;
 	}
-	
+
 	public function getOrganizationAddress()
 	{
 		$res = array();
 			$db = Zend_Db_Table::getDefaultAdapter();
 			$deptAddRes = $db->query("select d.address1,c.country,s.state,ct.city
-									from main_organisationinfo d 
+									from main_organisationinfo d
 									inner join main_countries c ON c.country_id_org = d.country
 									inner join main_states s ON s.state_id_org = d.state
 									inner join main_cities ct ON ct.city_org_id = d.city
 									where d.isactive = 1;");
 			return $res = $deptAddRes->fetch();
-			
+
 	}
 
 	public function addUserLoginLogManager($dataTmp)
 	{
 		$db = Zend_Db_Table::getDefaultAdapter();
 		$rows = $db->query("INSERT INTO `main_userloginlog` (userid,emprole,group_id,employeeId,emailaddress,userfullname,logindatetime,empipaddress,profileimg) VALUES (".$dataTmp['userid'].",".$dataTmp['emprole'].",".$dataTmp['group_id'].",'".$dataTmp['employeeId']."','".$dataTmp['emailaddress']."','".$dataTmp['userfullname']."','".$dataTmp['logindatetime']."','".$dataTmp['empipaddress']."','".$dataTmp['profileimg']."')");
-			
+
 		$id=$this->getAdapter()->lastInsertId('main_logmanager');
 		return $id;
 	}
@@ -527,12 +527,12 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 
 		return $username_arr;
 	}
-	
-	   
+
+
    /**
 	 * This function is used in expenses to get all users except login user.
 	 *
-	
+
 	 */
 	  	public function getUserList($id)
 	{
@@ -549,9 +549,9 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 
 		return $username_arr;
 	}
-	
-	
-	
+
+
+
 	/**
 	 * This function is used to get organizationimg.
 	 *
@@ -587,7 +587,7 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 			try
 			{
 				$qry = "select ob.id, ob.profileimg from main_users ob
-                                        where ob.id IN (".$resultstring.") and ob.isactive = 1";		
+                                        where ob.id IN (".$resultstring.") and ob.isactive = 1";
 				$db = Zend_Db_Table::getDefaultAdapter();
 				$sqlRes = $db->query($qry);
 				$userRes = $sqlRes->fetchAll();
@@ -607,24 +607,24 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 		}
 		return $userArray;
 	}
-	
+
 	public function getMailSettingsData()
 	{
 		$select = $this->select()
 		->setIntegrityCheck(false)
 		->from(array('m'=>'main_mail_settings'), array('m.*'));
-		
+
 		return $this->fetchAll($select)->toArray();
 	}
-	
+
 	public function addOrUpdateSettingsData($data, $where)
 	{
 		$date= gmdate("Y-m-d H:i:s");
 		$db = Zend_Db_Table::getDefaultAdapter();
-		
+
 		$select = 'SELECT count(id) as cnt FROM main_mail_settings';
 		$res = $db->query($select)->fetchAll();
-		
+
 			if(!empty($res) && isset($res[0]['cnt']) && $res[0]['cnt'] > 0)
 			{
 				$qry = "UPDATE main_mail_settings SET tls='".$data['tls']."', auth='".$data['auth']."', port=".$data['port'].", username='".$data['username']."', password='".$data['password']."', server_name='".$data['server_name']."', createddate='".$date."', modifieddate='".$date."' ";
@@ -659,17 +659,18 @@ class Default_Model_Users extends Zend_Db_Table_Abstract
 
 		return	$tmRole[0]['tm_role'];
 	}
-		public function getUserDetailsforView($data)
-		{
-            $db = Zend_Db_Table::getDefaultAdapter();
-			$query = 'SELECT concat(userfullname) as name FROM main_users where id in('.$data.') group by id'  ;
-			$result = $db->query($query);
-			$data= $result->fetchAll();
-			return $data;
-		}	
-	
-	
-	
-	
-	
+
+	public function getUserDetailsforView($data)
+	{
+		$db = Zend_Db_Table::getDefaultAdapter();
+		$query = 'SELECT concat(userfullname) as name FROM main_users where id in('.$data.') group by id'  ;
+		$result = $db->query($query);
+		$data= $result->fetchAll();
+		return $data;
+	}
+
+
+
+
+
 }
